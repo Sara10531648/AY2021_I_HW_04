@@ -258,6 +258,7 @@
       <Data key="77715107-f8d5-47e5-a629-0fb83101ac6b" value="Pin_POT" />
       <Data key="e851a3b9-efb8-48be-bbb8-b303b216c393" value="Pin_LED" />
       <Data key="e3140c99-99fa-40fb-9e12-1c17530afe56" value="Pin_PR" />
+      <Data key="f87ea19d-7fd7-48b3-ad5b-23ea0750fb58" value="Pin_LAMP" />
     </Group>
   </Group>
   <Group key="EEPROM">
@@ -3377,6 +3378,11 @@
     <Group key="e3140c99-99fa-40fb-9e12-1c17530afe56">
       <Group key="0">
         <Data key="Port Format" value="2,6" />
+      </Group>
+    </Group>
+    <Group key="f87ea19d-7fd7-48b3-ad5b-23ea0750fb58">
+      <Group key="0">
+        <Data key="Port Format" value="2,7" />
       </Group>
     </Group>
     <Group key="UnAssigned Pins" />
