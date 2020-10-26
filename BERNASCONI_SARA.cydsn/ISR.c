@@ -13,9 +13,8 @@
 #include "project.h"
 //necessario se single ended
 //value of pr
-int32 value_digit;
-int32 value_mv;
 
+extern uint8_t PR;
 
 
 
@@ -23,20 +22,20 @@ int32 value_mv;
 CY_ISR(Custom_ISR_ADC)
 {
     Timer_ReadStatusRegister();
-    
+    PR=1;
         
-    value_digit= ADC_DelSiG_Read32();
+    //value_digit= ADC_DelSiG_Read32();
     //if (value_digit<0)
     //value_digit=0;
     //if (value_digit>65535)
     //value_digit=65535;
     
-    value_mv=ADC_DelSiG_CountsTo_Volts(value_digit);
+    //value_mv=ADC_DelSiG_CountsTo_Volts(value_digit);
    //DataBuffer[1]=value_digit >> 8;
     //DataBuffer[2]=value_digit & 0XFF;
-    sprintf(DataBuffer," Sample %ld mV\r\n",value_mv);
+    //sprintf(DataBuffer," Sample %ld mV\r\n",value_mv);
     
-    PacketReadyFlag=1;
+    //PacketReadyFlag=1;
 
 }
 /* [] END OF FILE */
