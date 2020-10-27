@@ -9,6 +9,7 @@
 */
 #include "project.h"
 #include "isr.h"
+
 #include "stdio.h"
 
 #define MIDIUM 128
@@ -22,17 +23,19 @@ int32 PR_mv;
 int32 PR_digit;
 int32 POT_digit;
 uint8_t LAMP_STATE=LAMP_OFF;
-uint8_t PR;
+uint8_t PR=0;
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
-AMux_Start();
+//AMux_Start();
 //?
-AMux_FastSelect(0);
-ADC_DelSiG_Start();
-Timer_Start();
+//AMux_FastSelect(0);
 UART_Start();
+ADC_DelSiG_Start();
+//Timer_Start();
+
 PWM_LAMP_Start();
+isr_RX_StartEx(Custom_ISR_RX);
 isr_ADC_StartEx(Custom_ISR_ADC);
 
 
@@ -48,6 +51,7 @@ isr_ADC_StartEx(Custom_ISR_ADC);
         /* Place your application code here. */
         if( PR==1)
         {
+            AMux_Start();
             AMux_FastSelect(0);
             PR_digit=ADC_DelSiG_Read32();
             PR_mv=ADC_DelSiG_CountsTo_Volts(PR_digit);

@@ -18,6 +18,7 @@
     #define TRANSMIT_BUFFER_SIZE 16//1+ BYTE_TO_SEND +1
     
     CY_ISR_PROTO(Custom_ISR_ADC);
+    CY_ISR_PROTO(Custom_ISR_RX);
     
     
     char DataBuffer[TRANSMIT_BUFFER_SIZE];
