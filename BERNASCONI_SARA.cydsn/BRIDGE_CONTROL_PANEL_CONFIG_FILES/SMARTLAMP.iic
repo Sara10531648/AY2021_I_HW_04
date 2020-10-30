@@ -1,0 +1,2 @@
+rx8 [h=A0] @1PR @0PR @1POT @0POT [t=C0]
+;2 BYTES FOR PHOTORESISTANCE (mV),2 BYTES POTENTIOMETER (mV, =-1 if device on & lamp off)
