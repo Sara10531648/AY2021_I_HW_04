@@ -14,16 +14,18 @@
     #include "cytypes.h"
     #include "stdio.h"
     
-    //#define BYTE_TO_SEND 2
-    #define TRANSMIT_BUFFER_SIZE 16//1+ BYTE_TO_SEND +1
+    //2 BYTES FOR PHOTORESISTOR'S SIGNAL, 2 BYTES FOR POTENTIOMETER'S SIGNAL
+    #define BYTE_TO_SEND 4
+    //TRANSMIT 1 BYTE(HEAD)+4 BYTES FOR SIGNALS+1 BYTE (TAIL)
+    #define TRANSMIT_BUFFER_SIZE 1+ BYTE_TO_SEND +1
     
     CY_ISR_PROTO(Custom_ISR_ADC);
     CY_ISR_PROTO(Custom_ISR_RX);
     
     
-    char DataBuffer[TRANSMIT_BUFFER_SIZE];
-    //keyword usata da compilatore: durante compilazione se ho if(flag) e flag inizialmente a 0 non compila quella parte di codice
-    volatile uint8 PacketReadyFlag;
+    uint8 DataBuffer[TRANSMIT_BUFFER_SIZE];
+    //INTERRUPT FLAG
+    volatile uint8 PR;
 
 #endif
 /* [] END OF FILE */

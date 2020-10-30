@@ -8,100 +8,114 @@
  * ========================================
 */
 #include "project.h"
-#include "isr.h"
-
+#include "InterruptRoutines.h"
 #include "stdio.h"
 
-#define MIDIUM 128
-#define LOW 0
 
-#define LAMP_ON MIDIUM
-#define LAMP_OFF LOW
+//LAMP STATES
+#define LAMP_ON 1
+#define LAMP_OFF 0
 
+//THE THRESHOLD BELOW WHICH THE LAMP MUST TURN ON IN mV
+#define THRESHOLD 2500
 
-int32 PR_mv;
+//AMUX CHANNELS
+#define CHANNEL_PR 0
+#define CHANNEL_POT 1
+
+//VARIABLES TO SAVE OUTPUT OF SAMPLING
 int32 PR_digit;
 int32 POT_digit;
+
+//VARIABLES TO SAVE CONVERTION IN mV
+int32 PR_mv;
+int32 POT_mv;
+
+//LAMP IS OFF WHEN THE DVICE TURNS ON
 uint8_t LAMP_STATE=LAMP_OFF;
-uint8_t PR=0;
+ 
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
-//AMux_Start();
-//?
-//AMux_FastSelect(0);
-UART_Start();
-ADC_DelSiG_Start();
-//Timer_Start();
+    
+    //START UART,ADC,AMUX
+    UART_Start();
+    AMux_Init();
+    ADC_DelSiG_Start();
 
-PWM_LAMP_Start();
-isr_RX_StartEx(Custom_ISR_RX);
-isr_ADC_StartEx(Custom_ISR_ADC);
+    //ENABLE INTERRUPTS
+    isr_RX_StartEx(Custom_ISR_RX);
+    isr_ADC_StartEx(Custom_ISR_ADC);
 
+    //SET INTERRUPT FLAG 
+    PR=0;
+    
+    //SET HEAD & TAIL OF STANDARD PACKET
+    DataBuffer[0]=0XA0;
+    DataBuffer[TRANSMIT_BUFFER_SIZE-1]=0XC0;
 
-
-//DataBuffer[0]=0XA0;
-//DataBuffer[TRANSMIT_BUFFER_SIZE-1]=0XC0;
-//PacketReadyFlag=0;
-//ADC_DelSiG_StartConvert();
     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
 
     for(;;)
     {
         /* Place your application code here. */
-        if( PR==1)
-        {
-            AMux_Start();
-            AMux_FastSelect(0);
+        
+        if( PR)
+        {   PR=0;
+            //SELECTION OF PHOTORESISTANCE CHANNEL
+            AMux_FastSelect(CHANNEL_PR);
             PR_digit=ADC_DelSiG_Read32();
-            PR_mv=ADC_DelSiG_CountsTo_Volts(PR_digit);
-            sprintf(DataBuffer," Sample %ld mV\r\n",PR_mv);
-            UART_PutString(DataBuffer);
-            PR=0;
-            //NO LIGHT
-            if( PR_mv<=2)
+            PR_mv=ADC_DelSiG_CountsTo_mVolts(PR_digit);
+           
+            //NOT ENOUGH LIGHT-->LAMP MUST TURN ON
+            if( PR_mv<=THRESHOLD)
+            //SAVE THE STATUS AT WHICH THE LAMP MUST BE IN THIS CYCLE
+                LAMP_STATE=LAMP_ON;
+            else 
+            LAMP_STATE=LAMP_OFF;
+            //cambia qui lamp state
             switch(LAMP_STATE)
                 {
                     case LAMP_ON :
                     {
-                    AMux_FastSelect(1);
+                    //SELECTION OF POTENTIOMETER CHANNEL
+                    AMux_FastSelect(CHANNEL_POT);
                     POT_digit=ADC_DelSiG_Read32();
+                    if (POT_digit<0)    POT_digit=0;
+                    if (POT_digit>65535)    POT_digit=65535;
                     //LIGHT INTENSITY IS SET BY THE POTENTIOMETER
                     PWM_LAMP_WriteCompare(POT_digit);
-                   
+                    POT_mv=ADC_DelSiG_CountsTo_mVolts(POT_digit);
                     }
                      break;
+                    
                 case LAMP_OFF :
                     {
-                    //PWM_LAMP_WriteCompare(128);
-                    LAMP_STATE= LAMP_ON;
-                    }
-                    break;
-                
-                }
-             else
-                //THERE IS ENOUGH LIGHT IN THE AMBIENT
-                if(LAMP_STATE==LAMP_ON)
-                {
-                    LAMP_STATE=LAMP_OFF;
                     //TURN OFF THE LAMP
                     PWM_LAMP_WriteCompare(LAMP_OFF);
+                    //IF THE LAMP IS OFF POTENTIOMETER IS NOT SAMPLED
+                    POT_mv=-1;
+                    }
+                     break;
+                    
+                default:
+                break;
                 }
+        
+            //SAVE SAMPLED DATA IN BUFFER
+            DataBuffer[1]=PR_mv >> 8;
+            DataBuffer[2]=PR_mv & 0XFF;
+            DataBuffer[3]=POT_mv >> 8;
+            DataBuffer[4]=POT_mv & 0XFF;
+            
+            //SEND DATA BUFFER TO TERMINAL
+            UART_PutArray(DataBuffer,TRANSMIT_BUFFER_SIZE);
         }
     }
 }
         
         
-        /*if (PacketReadyFlag==1)
-        {
-            UART_PutString(DataBuffer);
-            PacketReadyFlag=0;
-            LAMP_STATE= Pin_LAMP_Read();
-            if (value_mv<2 && LAMP_STATE==LAMP_OFF)
-            //led on
-                Pin_LAMP_Write(LAMP_ON);
-            if (value_mv>=2 && LAMP_STATE==LAMP_ON)
-                Pin_LAMP_Write(LAMP_OFF);*/
+        
                
         
     

@@ -9,57 +9,65 @@
  *
  * ========================================
 */
-#include "isr.h"
+#include "InterruptRoutines.h"
 #include "project.h"
-//value of pr
-#include "UART.h"
-#include "Timer.h"
-#include "PWM_LAMP.h"
-
-extern uint8_t PR;
-
-uint8_t Remote=0;
-
 
 CY_ISR(Custom_ISR_ADC)
 
 {
+    //READ TIMER STATUS REGISTER TO BRING INTERRUPT LINE LOW
     Timer_ReadStatusRegister();
-    if (Remote==1)
+    
+    //IF I HAVE PRESSED B/b AND THE TIMER CALLS THE INTERRUPT PR IS SET TO 1
     PR=1;
 
 }
 CY_ISR(Custom_ISR_RX)
 {
+    //è NECESSARIO??no
     if(UART_ReadRxStatus()==UART_RX_STS_FIFO_NOTEMPTY)
     {
-        
+    //SAVE BYTE RECIVED   
     char recived=UART_ReadRxData();
+    
     switch( recived){
+       //IF B/b IS PRESSED THE DEVICE IS NOW ACTIVE WITH ALL ITS FUNCTIONALITIES
         case 'B':
         case 'b':
         {
-            UART_PutString("sono on\r\n");
-            Remote=1;
+         
+            //TURN ON THE ON BOARD LED WHILE SENDING DATAS FROM UART TO TERMINAL(togli on)
             Pin_LED_Write(1);
+             //START PWM
+            PWM_LAMP_Start();
+            //START TIMER
             Timer_Start();
+           
             
         }
             break;
+        
+        //IF S/s IS PRESSED THE DEVICE IS NO MORE ACTIVE (NO SAMPLING, NO CONTROL ON THE LAMP)
         case 'S':
         case 's':
         {
-            Remote=0;
+            
+            //TURN OFF LED
             Pin_LED_Write(0);
+            //STOP TIMER 
             Timer_Stop();
-            PWM_LAMP_WriteCompare(0);
+            //TURN OFF LIGHT 
+            PWM_LAMP_Stop();
+            //SET PR=0 AS THE INITIAL STATE 
             PR=0;
-            UART_PutString("sono off\r\n");
+         
+            
         }
         break;
+        
         default:
         break;
-    }
+        }
     }
 }
     
